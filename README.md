@@ -1,6 +1,6 @@
 # bracketolojy
 
-FIXME: description
+Use pythagorean expectation to spit out a bracket
 
 ## Installation
 

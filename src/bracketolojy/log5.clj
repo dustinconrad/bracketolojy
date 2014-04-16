@@ -15,9 +15,13 @@
   (log5 pa pb identity))
 
 (defn log5-vs-field [a b-coll wt-fn p-fn]
+  "Returns the probability of a defeating the field of b-coll.  When applied to
+  the elements of b-coll, wt-fn should return the expected proportion of b in
+  the field.  When applied to a or the elements of b-coll, p-fn should return
+  the pythagorean expectation."
   (reduce
     (fn [acc b]
       (+ acc
-         (* (wt-fn b) (log5 a b p-fn))))
+        (* (wt-fn b) (log5 a b p-fn))))
     0
     b-coll))

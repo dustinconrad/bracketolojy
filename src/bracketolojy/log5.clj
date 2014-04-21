@@ -1,6 +1,6 @@
 (ns bracketolojy.log5)
 
-(defn log5 [a b p-fn]
+(defn log5 [p-fn a b]
   "Returns the probability of a defeating b.  When applied to a or b,
   p-fn should return the pythagorean expectation."
   (let [pa (p-fn a)
@@ -12,7 +12,7 @@
 (defn log5-p [pa pb]
   "Returns the probability of a defeating b, where pa is the pythogrean
   expectation of a, and pb is the pythagorean expectation of b."
-  (log5 pa pb identity))
+  (log5 identity pa pb))
 
 (defn log5-vs-field [a b-coll wt-fn p-fn]
   "Returns the probability of a defeating the field of b-coll.  When applied to
@@ -22,6 +22,6 @@
   (reduce
     (fn [acc b]
       (+ acc
-        (* (wt-fn b) (log5 a b p-fn))))
+        (* (wt-fn b) (log5 p-fn a b))))
     0
     b-coll))

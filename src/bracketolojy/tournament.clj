@@ -33,7 +33,7 @@
                  (coll? (first field)) (coll? (last field)))))
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
-(defmethod compute-matchup true [pick-scoring upset-scoring [upper-field lower-field :as fields]]
+(defmethod compute-matchup true [pick-scoring upset-scoring [[upper-field _] [lower-field _] :as fields]]
   (let [round (count upper-field)
         pick-pts (get pick-scoring round)
         upset-pts (get upset-scoring round)]
@@ -49,19 +49,27 @@
               (assoc %1 name %2)))
         {})
       vals
-;      (#(vector % fields))
+      (#(vector % fields))
       )))
 
 (def sample-data
-  [[[(->Team "Florida" 1 0.9502 1 \_)]
-    [(->Team "Albany" 16 0.4698 1 \_)]]
+  [
+    [
+      [[(->Team "Florida" 1 0.9502 1 \_)] \_]
+      [[(->Team "Albany" 16 0.4698 1 \_)] \_]
+      ]
 
-   [[(->Team "Colorado" 8 0.7156 1 \_)]
-    [(->Team "Pittsburgh" 9 0.8848 1 \_)]]])
+    [
+      [[(->Team "Colorado" 8 0.7156 1 \_)] \_]
+      [[(->Team "Pittsburgh" 9 0.8848 1 \_)] \_]
+      ]
+   ])
 
 ;(def sample-data
-;  [[(->Team "Colorado" 8 0.7156 1 \_)]
-;   [(->Team "Pittsburgh" 9 0.8848 1 \_)]])
+;  [
+;    [[(->Team "Colorado" 8 0.7156 1 \_)] \_]
+;    [[(->Team "Pittsburgh" 9 0.8848 1 \_)] \_]
+;   ])
 
 (println
   (let [result (walk/postwalk

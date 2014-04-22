@@ -29,11 +29,14 @@
 (defmulti compute-matchup
           "Compute a matchup."
           (fn [pick-scoring upset-scoring field]
-            (and (coll? field) (= (count field) 2)
-                 (coll? (first field)) (coll? (last field)))))
+            (cond
+              (and (coll? field) (= (count field) 2) (record? (first field)) (record? (last field)))
+              :leaf
+              (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
+              :branch)))
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
-(defmethod compute-matchup true [pick-scoring upset-scoring [[upper-field _] [lower-field _] :as fields]]
+(defmethod compute-matchup :branch [pick-scoring upset-scoring [[upper-field] [lower-field] :as fields]]
   (let [round (count upper-field)
         pick-pts (get pick-scoring round)
         upset-pts (get upset-scoring round)]
@@ -49,19 +52,21 @@
               (assoc %1 name %2)))
         {})
       vals
-      (#(vector % fields))
-      )))
+      (#(vector % fields)))))
+(defmethod compute-matchup :leaf [pick-scoring upset-scoring [a b]]
+  (compute-matchup pick-scoring upset-scoring [[[a]] [[b]]]))
+
 
 (def sample-data
   [
     [
-      [[(->Team "Florida" 1 0.9502 1 \_)] \_]
-      [[(->Team "Albany" 16 0.4698 1 \_)] \_]
+      (->Team "Florida" 1 0.9502 1 0)
+      (->Team "Albany" 16 0.4698 1 0)
       ]
 
     [
-      [[(->Team "Colorado" 8 0.7156 1 \_)] \_]
-      [[(->Team "Pittsburgh" 9 0.8848 1 \_)] \_]
+      (->Team "Colorado" 8 0.7156 1 0)
+      (->Team "Pittsburgh" 9 0.8848 1 0)
       ]
    ])
 

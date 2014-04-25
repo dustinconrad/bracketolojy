@@ -27,8 +27,10 @@
                                           0))))))
 
 (defmulti compute-matchup
-          "Compute a matchup."
-          (fn [pick-scoring upset-scoring field]
+          "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
+          for each round.  The second argument is an associative structure that gives the points per an upset pick for each
+          round.  The third and final argument is the matchup data to perform the computation on."
+          (fn [_ _ field]
             (cond
               (and (coll? field) (= (count field) 2) (record? (first field)) (record? (last field)))
               :leaf
@@ -51,10 +53,36 @@
                   (update-in [name :avg-pts] + (:avg-pts %2)))
               (assoc %1 name %2)))
         {})
-      vals
-      (#(vector % fields)))))
+      vals                                                  ;get the aggregation
+      (#(vector % fields)))))                               ;preserve the tree
 (defmethod compute-matchup :leaf [pick-scoring upset-scoring [a b]]
   (compute-matchup pick-scoring upset-scoring [[[a]] [[b]]]))
+
+(def bracket
+  [[[["Florida"
+      "Albany"]
+
+     ["Colorado"
+      "Pittsburgh"]]
+
+    [["VCU"
+      "S F Austin"]
+
+     ["UCLA"
+      "Tulsa"]]]
+
+   [[["Ohio St."
+      "Dayton"]
+
+     ["Syracuse"
+      "Western Michigan"]]
+
+    [["New Mexico"
+      "Stanford"]
+
+     ["Kansas"
+      "E Kentucky"]]]])
+
 
 
 (def sample-data

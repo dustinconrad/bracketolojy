@@ -1,6 +1,7 @@
 (ns bracketolojy.tournament
   (:require [clojure.math.combinatorics :as combo]
             [bracketolojy.log5 :as log5]
+            [bracketolojy.team-data :as data]
             [clojure.walk :as walk]))
 
 (defrecord Team [name seed pe weight avg-pts])
@@ -104,14 +105,14 @@
 ;    [[(->Team "Pittsburgh" 9 0.8848 1 \_)] \_]
 ;   ])
 
-(println
-  (let [result (walk/postwalk
-          (partial compute-matchup [0 1 2] [0 1 2])
-          sample-data)
-        ;sum (->>
-        ;      result
-        ;      (map :weight)
-        ;      (reduce +))
-        ]
-    result))
+;(println
+;  (let [result (walk/postwalk
+;          (partial compute-matchup [0 1 2] [0 1 2])
+;          sample-data)
+;        ;sum (->>
+;        ;      result
+;        ;      (map :weight)
+;        ;      (reduce +))
+;        ]
+;    result))
 

@@ -4,27 +4,36 @@
 (defrecord Team [name seed pe])
 
 (defn parse-kenpom [html-resource]
+  "Extract team seed and pythagorean win expectation from an html-resource sourced
+  from http://kenpom.com/ and return a map of teams and their data."
   (let [rows (html/select html-resource [:#ratings-table :tr])]
     (->>
       rows
+      (filter (comp (partial = 21) count :content))
       (#(html/let-select %
          [name [[:td (html/nth-child 2)] :a html/text]
           seed [[:td (html/nth-child 2)] :span html/text]
           pe [[:td (html/nth-child 5)] html/text]]
-         (->Team (first name) (first seed) (first pe))))
-      (remove #(nil? (:seed %))))))
+         (->Team
+           (first name)
+           (if-let [seed-int (first seed)]
+             (Integer/parseInt seed-int)
+             nil)
+           (Double/parseDouble (first pe)))))
+      (remove (comp nil? :name)))))
 
-(defn fetch-kenpom-live []
-  (html/html-resource (java.net.URL. "http://kenpom.com/")))
+(defn get-kenpom-teams [source]
+  "Get the team data from a kenpom.com html page.  Source should be a url to the page."
+  (parse-kenpom (html/html-resource source)))
 
-(defn fetch-kenpom-bundled []
-  (html/html-resource (clojure.java.io/resource "kenpom.html")))
+(defn get-kenpom-teams-live []
+  "Fetch the live version of http://kenpom.com/ and return it's teams."
+  (get-kenpom-teams (java.net.URL "http://kenpom.com")))
 
-(println
-  (parse-kenpom (fetch-kenpom-bundled)))
-
-;(println
-;  (html/html-resource (java.net.URL. "http://kenpom.com/")))
+(defn get-kenpom-teams-bundled []
+  "Fetch the bundled version of http://kenpom.com/ from the resource directory and return
+  it's teams"
+  (get-kenpom-teams (clojure.java.io/resource "kenpom.html")))
 
 
 ;(map (fn [[_ {[{[name] :content} & _] :content} _ _ {} & more]]

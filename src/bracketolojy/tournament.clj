@@ -6,6 +6,11 @@
 
 (defrecord Team [name seed pe weight avg-pts])
 
+(defn- log2 [x]
+  (Math/round
+    (/ (Math/log x)
+       (Math/log 2))))
+
 (defn weighted-pairing-log5 [[a b]]
   "Compute and update the chance that Team a and Team b will advance when playing against each other,
   weighted by the chance the matchup will occur."
@@ -40,7 +45,7 @@
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
 (defmethod compute-matchup :branch [pick-scoring upset-scoring [[upper-field] [lower-field] :as fields]]
-  (let [round (count upper-field)
+  (let [round (log2 (count upper-field))
         pick-pts (get pick-scoring round)
         upset-pts (get upset-scoring round)]
     (->>
@@ -59,6 +64,24 @@
 (defmethod compute-matchup :leaf [pick-scoring upset-scoring [a b]]
   (compute-matchup pick-scoring upset-scoring [[[a]] [[b]]]))
 
+(defn to-tournament-teams [teams]
+  "Transform a list of teams into a map of team name->team data."
+  (->> teams
+    (remove (comp nil? :seed))
+    (map #(vector (:name %) (assoc (map->Team %) :weight 1 :avg-pts 0)))
+    (into {})))
+
+(defn to-tournament-bracket [bracket teams]
+  "Transforms a bracket of team names and a map of team data into a bracket with team data."
+  (walk/postwalk-replace
+    teams
+    bracket))
+
+(defn compute-tournament [pick-scoring upset-scoring tournament-bracket]
+  (walk/postwalk
+    (partial compute-matchup pick-scoring upset-scoring)
+    tournament-bracket))
+
 (def bracket
   [[[["Florida"
       "Albany"]
@@ -67,7 +90,7 @@
       "Pittsburgh"]]
 
     [["VCU"
-      "S F Austin"]
+      "Stephen F. Austin"]
 
      ["UCLA"
       "Tulsa"]]]
@@ -82,37 +105,17 @@
       "Stanford"]
 
      ["Kansas"
-      "E Kentucky"]]]])
+      "Eastern Kentucky"]]]])
 
+(println
+  (compute-tournament
+    [0 1 2 3 4 5]
+    [0 1 2 3 4 5]
+    (to-tournament-bracket
+      bracket
+      (to-tournament-teams (data/get-kenpom-teams-bundled)))))
 
-
-(def sample-data
-  [
-    [
-      (->Team "Florida" 1 0.9502 1 0)
-      (->Team "Albany" 16 0.4698 1 0)
-      ]
-
-    [
-      (->Team "Colorado" 8 0.7156 1 0)
-      (->Team "Pittsburgh" 9 0.8848 1 0)
-      ]
-   ])
-
-;(def sample-data
-;  [
-;    [[(->Team "Colorado" 8 0.7156 1 \_)] \_]
-;    [[(->Team "Pittsburgh" 9 0.8848 1 \_)] \_]
-;   ])
-
-;(println
-;  (let [result (walk/postwalk
-;          (partial compute-matchup [0 1 2] [0 1 2])
-;          sample-data)
-;        ;sum (->>
-;        ;      result
-;        ;      (map :weight)
-;        ;      (reduce +))
-;        ]
-;    result))
+;(println (to-tournament-bracket
+;          bracket
+;          (to-tournament-teams (data/get-kenpom-teams-bundled))))
 

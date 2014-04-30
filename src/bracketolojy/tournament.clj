@@ -45,7 +45,7 @@
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
 (defmethod compute-matchup :branch [pick-scoring upset-scoring [[upper-field] [lower-field] :as fields]]
-  (let [round (log2 (count upper-field))
+  (let [round (log2 (reduce + (map count fields)))
         pick-pts (get pick-scoring round)
         upset-pts (get upset-scoring round)]
     (->>
@@ -109,13 +109,9 @@
 
 (println
   (compute-tournament
-    [0 1 2 3 4 5]
-    [0 1 2 3 4 5]
+    [0 1 2 4 8 12 16]
+    [0 1 2 3 4 5 6]
     (to-tournament-bracket
       bracket
       (to-tournament-teams (data/get-kenpom-teams-bundled)))))
-
-;(println (to-tournament-bracket
-;          bracket
-;          (to-tournament-teams (data/get-kenpom-teams-bundled))))
 

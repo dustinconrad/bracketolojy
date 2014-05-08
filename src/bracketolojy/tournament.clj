@@ -86,7 +86,7 @@
     (partial compute-matchup pick-scoring upset-scoring)
     tournament-bracket))
 
-(defn update-future-pts [[field children] parent-team-map]
+(defn- update-child-future-pts [parent-team-map [field children]]
   "Update the future-pts of each team in the field using parent-team-map.  The future-pts for each team in the
   field is the team's average points plus the future-pts of the team in the parent-team-map."
   (vector
@@ -97,29 +97,37 @@
       field)
     children))
 
-(defn- compute-future-pts-helper [loc parent-team-map]
+(defn update-future-pts [[field children]]
+  "For each child in children, update the future-pts of the teams in that child's field.  The future-pts for each team
+  in a field is the team's average points plus the future-pts of the team in the parent field."
+  (vector
+    field
+    (let [parent-team-map (->>                                                ;create parent map
+                            field
+                            (map #((juxt :name identity) %))
+                            (into {}))]
+      (map
+        (partial update-child-future-pts parent-team-map)
+        children))))
+
+(defn- compute-future-pts-helper [loc]
   (if (zip/end? loc)
     loc
-    (let [updated-loc (zip/edit loc update-future-pts parent-team-map)]
-      (recur
-        (zip/next updated-loc)
-        (->>                                                ;create next parent map
-          (zip/node updated-loc)
-          first
-          (map #((juxt :name identity) %))
-          (into {}))))))
+    (recur (->>
+             (zip/edit loc update-future-pts)
+             zip/next))))
 
 (defn compute-future-pts [tp]
-  (->
+  (->>
+    (update-child-future-pts nil tp)
     (zip/zipper
       (fn [[_ cn]]
-        (vector? cn))
+        (or (vector? cn) (seq? cn)))
       (fn [[_ cn]]
-        cn)
+        (seq cn))
       (fn [node cn]
-        (assoc node 1 cn))
-      tp)
-    (compute-future-pts-helper nil)
+        (assoc node 1 cn)))
+    compute-future-pts-helper
     zip/root))
 
 ;(def bracket
@@ -160,7 +168,7 @@
 ;    ["UCLA"
 ;     "Tulsa"]]]
 ;  )
-;
+
 (def bracket
   [["VCU"
     "Stephen F. Austin"]

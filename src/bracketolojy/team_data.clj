@@ -3,7 +3,7 @@
 
 (defrecord Team [name seed pe])
 
-(defn parse-kenpom [html-resource]
+(defn- parse-kenpom [html-resource]
   "Extract team seed and pythagorean win expectation from an html-resource sourced
   from http://kenpom.com/ and return a map of teams and their data."
   (let [rows (html/select html-resource [:#ratings-table :tr])]
@@ -34,7 +34,3 @@
   "Fetch the bundled version of http://kenpom.com/ from the resource directory and return
   it's teams"
   (get-kenpom-teams (clojure.java.io/resource "kenpom.html")))
-
-
-;(map (fn [[_ {[{[name] :content} & _] :content} _ _ {} & more]]
-;       (apply vector name pe more)))

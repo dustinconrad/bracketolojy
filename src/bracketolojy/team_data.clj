@@ -3,9 +3,10 @@
 
 (defrecord Team [name seed pe])
 
-(defn- parse-kenpom [html-resource]
+(defn- parse-kenpom
   "Extract team seed and pythagorean win expectation from an html-resource sourced
   from http://kenpom.com/ and return a map of teams and their data."
+  [html-resource]
   (let [rows (html/select html-resource [:#ratings-table :tr])]
     (->>
       rows
@@ -22,15 +23,18 @@
            (Double/parseDouble (first pe)))))
       (remove (comp nil? :name)))))
 
-(defn get-kenpom-teams [source]
+(defn get-kenpom-teams
   "Get the team data from a kenpom.com html page.  Source should be a url to the page."
+  [source]
   (parse-kenpom (html/html-resource source)))
 
-(defn get-kenpom-teams-live []
+(defn get-kenpom-teams-live
   "Fetch the live version of http://kenpom.com/ and return it's teams."
+  []
   (get-kenpom-teams (java.net.URL "http://kenpom.com")))
 
-(defn get-kenpom-teams-bundled []
+(defn get-kenpom-teams-bundled
   "Fetch the bundled version of http://kenpom.com/ from the resource directory and return
   it's teams"
+  []
   (get-kenpom-teams (clojure.java.io/resource "kenpom.html")))

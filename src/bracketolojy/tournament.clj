@@ -7,23 +7,26 @@
 
 (defrecord Team [name seed pe weight avg-pts future-pts])
 
-(defn- log2 [x]
+(defn- log2
   "The log base 2 of x, rounded to the nearest integer."
+  [x]
   (Math/round
     (/ (Math/log x)
        (Math/log 2))))
 
-(defn weighted-pairing-log5 [[a b]]
+(defn weighted-pairing-log5
   "Compute and update the chance that Team a and Team b will advance when playing against each other,
   weighted by the chance the matchup will occur."
+  [[a b]]
   (let [pe-avb (log5/log5 :pe a b)]
     (vector
       (update-in a [:weight] * (:weight b) pe-avb)
       (update-in b [:weight] * (:weight a) (- 1 pe-avb)))))
 
-(defn weighted-pairing-pts [pick-pts upset-pts [a b]]
+(defn weighted-pairing-pts
   "Compute the expected point outcome Team a and Team b will yield when playing each other, using the
   the current weights for each team."
+  [pick-pts upset-pts [a b]]
   (vector
     (assoc a :avg-pts (* (:weight a) (+ pick-pts
                                         (if (> (:seed a) (:seed b))
@@ -34,15 +37,17 @@
                                           upset-pts
                                           0))))))
 
-(defn ->tournament-teams [team-data]
+(defn ->tournament-teams
   "Transform a sequence of team data into a map of team name->tournament team data."
+  [team-data]
   (->> team-data
        (remove (comp nil? :seed))
        (map #(vector (:name %) (assoc (map->Team %) :weight 1 :avg-pts 0 :future-pts 0)))
        (into {})))
 
-(defn ->tournament-bracket [bracket tournament-teams]
+(defn ->tournament-bracket
   "Transforms a bracket of team names and a map of tourament team data into a bracket of tournament teams."
+  [bracket tournament-teams]
   (walk/postwalk-replace
     tournament-teams
     bracket))
@@ -79,19 +84,21 @@
 (defmethod compute-matchup :leaf [pick-scoring upset-scoring [a b]]
   (compute-matchup pick-scoring upset-scoring [[(list a)] [(list b)]]))
 
-(defn tournament-probabilities [pick-scoring upset-scoring tournament-bracket]
+(defn tournament-probabilities
   "Computes the probability of the various outcomes of a tournament.  Calculates the first round, then
   uses the results from that to calculate the second round, ad infinitum until all rounds are calculated.
   The first argument is an associative structure that gives the points per a correct pick for each round.
   The second argument is an associative structure that gives the points per an upset pick for each round.
   The third and final argument is the tournament bracket."
+  [pick-scoring upset-scoring tournament-bracket]
   (walk/postwalk
     (partial compute-matchup pick-scoring upset-scoring)
     tournament-bracket))
 
-(defn- update-child-future-pts [parent-team-map [field children]]
+(defn- update-child-future-pts
   "Update the future-pts of each team in the field using parent-team-map.  The future-pts for each team in the
   field is the team's average points plus the future-pts of the team in the parent-team-map."
+  [parent-team-map [field children]]
   (vector
     (map
       #(update-in % [:future-pts] +
@@ -100,9 +107,10 @@
       field)
     children))
 
-(defn- update-future-pts [[field children]]
+(defn- update-future-pts
   "For each child in children, update the future-pts of the teams in that child's field.  The future-pts for each team
   in a field is the team's average points plus the future-pts of the team in the parent field."
+  [[field children]]
   (vector
     field
     (let [parent-team-map (->>
@@ -113,16 +121,18 @@
         (partial update-child-future-pts parent-team-map)
         children))))
 
-(defn- compute-future-pts-helper [loc]
+(defn- compute-future-pts-helper
   "Recursively traverse the zipper, updating each node with the future points computation."
+  [loc]
   (if (zip/end? loc)
     loc
     (recur (->>
              (zip/edit loc update-future-pts)
              zip/next))))
 
-(defn compute-future-pts [tp]
+(defn compute-future-pts
   "Compute the future points for each node in the tournament probabilites tree."
+  [tp]
   (->>
     (update-child-future-pts nil tp)
     (zip/zipper
@@ -135,11 +145,12 @@
     compute-future-pts-helper
     zip/root))
 
-(defn predict-bracket [bracket pick-scoring upset-scoring team-data]
+(defn predict-bracket
   "Predict the expected future points for each team in each round of the tournament.  Bracket should be
   a bracket of team names in a tree structure.  pick-scoring is an associative structure that gives the points
   per a correct pick for each round.  upset-scoring is an associative structure that gives the points per an
   upset pick for each round.  team-data is a seq of team data."
+  [bracket pick-scoring upset-scoring team-data]
   (->>
     (->tournament-bracket
       bracket

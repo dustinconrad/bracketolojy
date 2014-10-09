@@ -5,8 +5,6 @@
             [clojure.walk :as walk]
             [clojure.zip :as zip]))
 
-(defrecord Team [name seed pe weight avg-pts future-pts])
-
 (defn- log2
   "The log base 2 of x, rounded to the nearest integer."
   [x]
@@ -42,7 +40,7 @@
   [team-data]
   (->> team-data
        (remove (comp nil? :seed))
-       (map #(vector (:name %) (assoc (map->Team %) :weight 1 :avg-pts 0 :future-pts 0)))
+       (map #(vector (:name %) (assoc % :weight 1 :avg-pts 0 :future-pts 0)))
        (into {})))
 
 (defn ->tournament-bracket
@@ -58,7 +56,7 @@
   round.  The third and final argument is the matchup data to perform the computation on."
   (fn [_ _ field]
     (cond
-      (and (coll? field) (= (count field) 2) (record? (first field)) (record? (last field)))
+      (and (coll? field) (= (count field) 2) (map? (first field)) (map? (last field)))
       :leaf
       (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
       :branch)))

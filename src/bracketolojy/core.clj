@@ -27,7 +27,7 @@
      ["Kansas"
       "Eastern Kentucky"]]]])
 
-(println
+(defn- main []
   (tourney/predict-bracket
     bracket
     [0 1 2 4 8 12 16]

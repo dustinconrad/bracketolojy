@@ -124,9 +124,7 @@
   [loc]
   (if (zip/end? loc)
     loc
-    (recur (->>
-             (zip/edit loc update-future-pts)
-             zip/next))))
+    (recur (zip/next (zip/edit loc update-future-pts)))))
 
 (defn compute-future-pts
   "Compute the future points for each node in the tournament probabilites tree."

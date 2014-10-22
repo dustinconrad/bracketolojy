@@ -1,6 +1,11 @@
 (ns bracketolojy.team-data
   (:require [net.cgrand.enlive-html :as html]))
 
+(defn ->team [name seed pe]
+  {:name name
+  :seed seed
+  :pe pe})
+
 (defn- parse-kenpom
   "Extract team seed and pythagorean win expectation from an html-resource sourced
   from http://kenpom.com/ and return a map of teams and their data."
@@ -13,12 +18,11 @@
          [name [[:td (html/nth-child 2)] :a html/text]
           seed [[:td (html/nth-child 2)] :span html/text]
           pe [[:td (html/nth-child 5)] html/text]]
-         (hash-map
-           :name (first name)
-           :seed (if-let [seed-int (first seed)]
-                   (Integer/parseInt seed-int)
-                   nil)
-           :pe (Double/parseDouble (first pe)))))
+         (->team
+           (first name)
+           (when-let [seed-int (first seed)]
+             (Integer/parseInt seed-int))
+           (Double/parseDouble (first pe)))))
       (remove (comp nil? :name)))))
 
 (defn get-kenpom-teams

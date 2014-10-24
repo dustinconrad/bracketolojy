@@ -1,6 +1,7 @@
 (ns bracketolojy.handler
   (:require [compojure.core :refer [defroutes]]
             [bracketolojy.routes.home :refer [home-routes]]
+            [bracketolojy.routes.api :refer [api-routes]]
             [bracketolojy.middleware :refer [load-middleware]]
             [bracketolojy.session-manager :as session-manager]
             [noir.response :refer [redirect]]
@@ -64,7 +65,7 @@
 
 (def app (app-handler
            ;; add your application routes here
-           [home-routes base-routes]
+           [home-routes api-routes base-routes]
            ;; add custom middleware here
            :middleware (load-middleware)
            :ring-defaults (mk-defaults false)

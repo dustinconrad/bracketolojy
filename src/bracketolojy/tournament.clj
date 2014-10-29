@@ -62,10 +62,10 @@
       :branch)))
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
-(defmethod compute-matchup :branch [pick-scoring upset-scoring [[upper-field] [lower-field] :as fields]]
+(defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn [[upper-field] [lower-field] :as fields]]
   (let [round (log2 (reduce + (map count fields)))
-        pick-pts (get pick-scoring round)
-        upset-pts (get upset-scoring round)]
+        pick-pts (pick-pts-fn round)
+        upset-pts (upset-pts-fn round)]
     (->>
       (combo/cartesian-product upper-field lower-field)     ;all head to head games
       (map (partial apply weighted-pairing-log5))           ;calculate win % per game

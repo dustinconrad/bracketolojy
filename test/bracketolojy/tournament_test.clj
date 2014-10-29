@@ -32,7 +32,7 @@
     (are [a-seed b-seed pick-pts upset-pts a-pts b-pts]
       (= (weighted-pairing-pts pick-pts upset-pts
                                ;name seed pe weight avg-pts
-                               [(->tournament-team "a" a-seed \_ 1 \_) (->tournament-team "b" b-seed \_ 1 \_)])
+                               (->tournament-team "a" a-seed \_ 1 \_) (->tournament-team "b" b-seed \_ 1 \_))
          [(->tournament-team "a" a-seed \_ 1 a-pts)
           (->tournament-team "b" b-seed \_ 1 b-pts)])
       1 16 1 1 1 2
@@ -42,7 +42,7 @@
     (are [a-weight b-weight a-seed b-seed pick-pts upset-pts]
       (= (weighted-pairing-pts pick-pts upset-pts
            ;name seed pe weight avg-pts
-           [(->tournament-team "a" a-seed \_ a-weight \_) (->tournament-team "b" b-seed \_ b-weight \_)])
+           (->tournament-team "a" a-seed \_ a-weight \_) (->tournament-team "b" b-seed \_ b-weight \_))
          [(->tournament-team "a" a-seed \_ a-weight (* a-weight (+ pick-pts (if (> a-seed b-seed) upset-pts 0))))
           (->tournament-team "b" b-seed \_ b-weight (* b-weight (+ pick-pts (if (> b-seed a-seed) upset-pts 0))))])
       1 1 1 16 1 1

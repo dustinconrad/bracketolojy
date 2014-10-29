@@ -24,7 +24,7 @@
 (defn weighted-pairing-pts
   "Compute the expected point outcome Team a and Team b will yield when playing each other, using the
   the current weights for each team."
-  [pick-pts upset-pts [a b]]
+  [pick-pts upset-pts a b]
   (vector
     (assoc a :avg-pts (* (:weight a) (+ pick-pts
                                         (if (> (:seed a) (:seed b))
@@ -69,7 +69,7 @@
     (->>
       (combo/cartesian-product upper-field lower-field)     ;all head to head games
       (map (partial apply weighted-pairing-log5))           ;calculate win % per game
-      (mapcat (partial weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
+      (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
       (reduce                                               ;aggregate game results together
         #(let [name (:name %2)]
             (if (contains? %1 name)

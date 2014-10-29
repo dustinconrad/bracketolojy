@@ -15,7 +15,7 @@
     (are [a b a-weight b-weight]
       (= (weighted-pairing-log5
            ;name seed pe weight avg-pts
-           [(->tournament-team "a" \_ a a-weight \_) (->tournament-team "b" \_ b b-weight \_)])
+           (->tournament-team "a" \_ a a-weight \_) (->tournament-team "b" \_ b b-weight \_))
          [(->tournament-team "a" \_ a (* (log5/log5-p a b) a-weight b-weight) \_)
           (->tournament-team "b" \_ b (* (log5/log5-p b a) a-weight b-weight) \_)])
       9/10 4/10 1 1

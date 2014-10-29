@@ -15,7 +15,7 @@
 (defn weighted-pairing-log5
   "Compute and update the chance that Team a and Team b will advance when playing against each other,
   weighted by the chance the matchup will occur."
-  [[a b]]
+  [a b]
   (let [pe-avb (log5/log5 :pe a b)]
     (vector
       (update-in a [:weight] * (:weight b) pe-avb)
@@ -68,7 +68,7 @@
         upset-pts (get upset-scoring round)]
     (->>
       (combo/cartesian-product upper-field lower-field)     ;all head to head games
-      (map weighted-pairing-log5)                           ;calculate win % per game
+      (map (partial apply weighted-pairing-log5))           ;calculate win % per game
       (mapcat (partial weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
       (reduce                                               ;aggregate game results together
         #(let [name (:name %2)]

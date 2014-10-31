@@ -40,7 +40,7 @@
   [team-data]
   (->> team-data
        (remove (comp nil? :seed))
-       (map #(vector (:name %) (assoc % :weight 1 :avg-pts 0 :future-pts 0)))
+       (map #(vector (:name %) (assoc % :weight 1 :avg-pts 0 :expected-value 0)))
        (into {})))
 
 (defn ->tournament-bracket
@@ -93,21 +93,21 @@
     (partial compute-matchup pick-scoring upset-scoring)
     tournament-bracket))
 
-(defn- update-child-future-pts
-  "Update the future-pts of each team in the field using parent-team-map.  The future-pts for each team in the
-  field is the team's average points plus the future-pts of the team in the parent-team-map."
+(defn- update-child-expected-value
+  "Update the expected value of each team in the field using parent-team-map.  The expected value for each team in the
+  field is the team's average points plus the expected value of the team in the parent-team-map."
   [parent-team-map [field children]]
   (vector
     (map
-      #(update-in % [:future-pts] +
-        (get-in parent-team-map [(:name %) :future-pts] 0)
+      #(update-in % [:expected-value] +
+        (get-in parent-team-map [(:name %) :expected-value] 0)
         (:avg-pts %))
       field)
     children))
 
-(defn- update-future-pts
-  "For each child in children, update the future-pts of the teams in that child's field.  The future-pts for each team
-  in a field is the team's average points plus the future-pts of the team in the parent field."
+(defn- update-expected-value
+  "For each child in children, update the expected value of the teams in that child's field.  The expected value for each team
+  in a field is the team's average points plus the expected value of the team in the parent field."
   [[field children]]
   (vector
     field
@@ -116,21 +116,21 @@
                             (map #((juxt :name identity) %))
                             (into {}))]
       (map
-        (partial update-child-future-pts parent-team-map)
+        (partial update-child-expected-value parent-team-map)
         children))))
 
-(defn- compute-future-pts-helper
-  "Recursively traverse the zipper, updating each node with the future points computation."
+(defn- compute-expected-value-helper
+  "Recursively traverse the zipper, updating each node with the expected value computation."
   [loc]
   (if (zip/end? loc)
     loc
-    (recur (zip/next (zip/edit loc update-future-pts)))))
+    (recur (zip/next (zip/edit loc update-expected-value)))))
 
-(defn compute-future-pts
-  "Compute the future points for each node in the tournament probabilites tree."
+(defn compute-expected-value
+  "Compute the expected value for each node in the tournament probabilites tree."
   [tp]
   (->>
-    (update-child-future-pts nil tp)
+    (update-child-expected-value nil tp)
     (zip/zipper
       (fn [[_ cn]]
         (or (vector? cn) (seq? cn)))
@@ -138,11 +138,11 @@
         (seq cn))
       (fn [node cn]
         (assoc node 1 cn)))
-    compute-future-pts-helper
+    compute-expected-value-helper
     zip/root))
 
 (defn predict-bracket
-  "Predict the expected future points for each team in each round of the tournament.  Bracket should be
+  "Predict the expected value for each team in each round of the tournament.  Bracket should be
   a bracket of team names in a tree structure.  pick-scoring is an associative structure that gives the points
   per a correct pick for each round.  upset-scoring is an associative structure that gives the points per an
   upset pick for each round.  team-data is a seq of team data."
@@ -154,4 +154,4 @@
     (tournament-probabilities
       pick-scoring
       upset-scoring)
-    compute-future-pts))
+    compute-expected-value))

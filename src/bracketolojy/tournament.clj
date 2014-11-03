@@ -25,15 +25,15 @@
   "Compute the expected point outcome Team a and Team b will yield when playing each other, using the
   the current weights for each team."
   [pick-pts upset-pts a b]
-  (vector
-    (assoc a :avg-pts (* (:weight a) (+ pick-pts
-                                        (if (> (:seed a) (:seed b))
-                                          upset-pts
-                                          0))))
-    (assoc b :avg-pts (* (:weight b) (+ pick-pts
-                                        (if (> (:seed b) (:seed a))
-                                          upset-pts
-                                          0))))))
+  (let [a-comp-b (compare (:seed a) (:seed b))
+        plus (fnil + 0)]
+    (vector
+     (assoc a :avg-pts (* (:weight a) (plus (when (pos? a-comp-b)
+                                              upset-pts)
+                                            pick-pts)))
+     (assoc b :avg-pts (* (:weight b) (plus (when (neg? a-comp-b)
+                                              upset-pts)
+                                            pick-pts))))))
 
 (defn ->tournament-teams
   "Transform a sequence of team data into a map of team name->tournament team data."
@@ -99,8 +99,8 @@
   [parent-team-map [field children]]
   (vector
     (map
-      #(update-in % [:expected-value] +
-        (get-in parent-team-map [(:name %) :expected-value] 0)
+      #(update-in % [:expected-value] (fnil + 0 0)
+        (get-in parent-team-map [(:name %) :expected-value])
         (:avg-pts %))
       field)
     children))

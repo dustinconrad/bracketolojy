@@ -1,6 +1,7 @@
 (ns bracketolojy.tournament
   (:require [clojure.math.combinatorics :as combo]
             [bracketolojy.log5 :as log5]
+            [bracketolojy.util :refer :all]
             [bracketolojy.team-data :as data]
             [clojure.walk :as walk]
             [clojure.zip :as zip]))
@@ -58,12 +59,15 @@
     (cond
       (and (coll? field) (= (count field) 2) (map? (first field)) (map? (last field)))
       :leaf
+
       (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
       :branch)))
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
-(defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn [[upper-field] [lower-field] :as fields]]
-  (let [round (log2 (reduce + (map count fields)))
+(defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn fields]
+  (let [upper-field (get-in fields [0 0])
+        lower-field (get-in fields [1 0])
+        round (log2 (reduce + (map count fields)))
         pick-pts (pick-pts-fn round)
         upset-pts (upset-pts-fn round)]
     (->>
@@ -79,8 +83,10 @@
         {})
       vals                                                  ;get the aggregation
       (#(vector % fields)))))                               ;preserve the tree
-(defmethod compute-matchup :leaf [pick-scoring upset-scoring [a b]]
-  (compute-matchup pick-scoring upset-scoring [[(list a)] [(list b)]]))
+(defmethod compute-matchup :leaf [pick-scoring upset-scoring pair]
+  (let [a (get pair 0)
+        b (get pair 1)]
+    (compute-matchup pick-scoring upset-scoring [[(list a)] [(list b)]])))
 
 (defn tournament-probabilities
   "Computes the probability of the various outcomes of a tournament.  Calculates the first round, then

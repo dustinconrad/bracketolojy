@@ -51,20 +51,26 @@
     tournament-teams
     bracket))
 
-(defmulti #^{:private true} compute-matchup
+(defn compute-matchup-dispatch [_ _ fields]
+  (cond
+    (and (coll? fields) (= (count fields) 2) (map? (first fields)) (map? (last fields)))
+    :leaf
+
+    (and (coll? fields) (= (count fields) 2) (coll? (first fields)) (coll? (last fields)))
+    :branch))
+
+(defmulti compute-matchup
   "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
   for each round.  The second argument is an associative structure that gives the points per an upset pick for each
   round.  The third and final argument is the matchup data to perform the computation on."
-  (fn [_ _ field]
-    (cond
-      (and (coll? field) (= (count field) 2) (map? (first field)) (map? (last field)))
-      :leaf
-
-      (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
-      :branch)))
+  compute-matchup-dispatch)
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
 (defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn fields]
+  (dbg-v "")
+  (dbg-v "branch")
+  (dbg fields)
+  (dbg (compute-matchup-dispatch pick-pts-fn upset-pts-fn fields))
   (let [upper-field (get-in fields [0 0])
         lower-field (get-in fields [1 0])
         round (log2 (reduce + (map count fields)))
@@ -82,11 +88,16 @@
               (assoc %1 name %2)))
         {})
       vals                                                  ;get the aggregation
-      (#(vector % fields)))))                               ;preserve the tree
+      (#(hash-map :value % :left upper-field :right lower-field))
+      dbg-v)))                               ;preserve the tree
 (defmethod compute-matchup :leaf [pick-scoring upset-scoring pair]
+  (dbg-v "")
+  (dbg-v "leaf")
+  (dbg pair)
+  (dbg (compute-matchup-dispatch pick-scoring upset-scoring pair))
   (let [a (get pair 0)
         b (get pair 1)]
-    (compute-matchup pick-scoring upset-scoring [[(list a)] [(list b)]])))
+    (compute-matchup pick-scoring upset-scoring {:left {:value (list a)} :right {:value (list b)}})))
 
 (defn tournament-probabilities
   "Computes the probability of the various outcomes of a tournament.  Calculates the first round, then

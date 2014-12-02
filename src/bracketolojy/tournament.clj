@@ -1,5 +1,6 @@
 (ns bracketolojy.tournament
   (:require [clojure.math.combinatorics :as combo]
+            [bracketolojy.util :refer :all]
             [bracketolojy.log5 :as log5]
             [bracketolojy.team-data :as data]
             [clojure.walk :as walk]

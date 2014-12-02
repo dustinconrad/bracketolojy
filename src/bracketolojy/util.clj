@@ -6,3 +6,11 @@
   "reads a markdown file from public/md and returns an HTML string"
   [filename]
   (md/md-to-html-string (io/slurp-resource filename)))
+
+(defmacro dbg [x]
+  `(let [x# ~x]
+     (println "dbg:" '~x "=" x#) x#))
+
+(defmacro dbg-v [x]
+  `(let [x# ~x]
+     (println "dbg:" x#) x#))

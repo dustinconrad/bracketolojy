@@ -51,6 +51,28 @@
     tournament-teams
     bracket))
 
+(defn- treeify-dispatch [node]
+  (cond
+    (and (coll? node) (= (count node) 2) (map? (first node)) (map? (last node)))
+    :branch
+
+    (and (map? node) (not (contains? node :upper)) (not (contains? node :lower)))
+    :leaf))
+
+(defmulti #^{:private true} treeify
+  treeify-dispatch)
+(defmethod treeify :default [node]
+  node)
+(defmethod treeify :branch [[upper lower]]
+  {:upper upper :lower lower})
+(defmethod treeify :leaf [node]
+  {:data {:teams (list node)} :upper nil :lower nil})
+
+(defn ->tournament-tree [bracket]
+  (walk/postwalk
+    treeify
+    bracket))
+
 (defmulti #^{:private true} compute-matchup
   "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
   for each round.  The second argument is an associative structure that gives the points per an upset pick for each
@@ -152,7 +174,4 @@
     (->tournament-bracket
       bracket
       (->tournament-teams team-data))
-    (tournament-probabilities
-      pick-scoring
-      upset-scoring)
-    compute-expected-value))
+    ->tournament-tree))

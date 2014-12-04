@@ -13,29 +13,6 @@
     (/ (Math/log x)
        (Math/log 2))))
 
-(defn weighted-pairing-log5
-  "Compute and update the chance that Team a and Team b will advance when playing against each other,
-  weighted by the chance the matchup will occur."
-  [a b]
-  (let [pe-avb (log5/log5 :pe a b)]
-    (vector
-      (update-in a [:weight] * (:weight b) pe-avb)
-      (update-in b [:weight] * (:weight a) (- 1 pe-avb)))))
-
-(defn weighted-pairing-pts
-  "Compute the expected point outcome Team a and Team b will yield when playing each other, using the
-  the current weights for each team."
-  [pick-pts upset-pts a b]
-  (let [a-comp-b (compare (:seed a) (:seed b))
-        plus (fnil + 0)]
-    (vector
-     (assoc a :avg-pts (* (:weight a) (plus (when (pos? a-comp-b)
-                                              upset-pts)
-                                            pick-pts)))
-     (assoc b :avg-pts (* (:weight b) (plus (when (neg? a-comp-b)
-                                              upset-pts)
-                                            pick-pts))))))
-
 (defn ->tournament-teams
   "Transform a sequence of team data into a map of team name->tournament team data."
   [team-data]
@@ -60,7 +37,7 @@
     :leaf))
 
 (defmulti #^{:private true} treeify
-  treeify-dispatch)
+          treeify-dispatch)
 (defmethod treeify :default [node]
   node)
 (defmethod treeify :branch [[upper lower]]
@@ -73,16 +50,61 @@
     treeify
     bracket))
 
+(defn- compute-round-dispatch [_ node]
+  (when (and (map? node) (contains? node :upper) (contains? node :lower))
+    (if (get-in node [:data :round])
+      :branch
+      :root)))
+
+(defmulti #^{:private true} compute-round
+  compute-round-dispatch)
+(defmethod compute-round :default [_ node]
+  node)
+(defmethod compute-round :branch [_ node]
+  (let [current-round (get-in node [:data :round])]
+    (-> (assoc-in node [:upper :data :round] (dec current-round))
+        (assoc-in [:lower :data :round] (dec current-round)))))
+(defmethod compute-round :root [max-rounds node]
+  (compute-round max-rounds (assoc-in node [:data :round] max-rounds)))
+
+(defn round-info [max-rounds tree]
+  (walk/prewalk
+    (partial compute-round max-rounds)
+    tree))
+
+(defn weighted-pairing-log5
+  "Compute and update the chance that Team a and Team b will advance when playing against each other,
+  weighted by the chance the matchup will occur."
+  [a b]
+  (let [pe-avb (log5/log5 :pe a b)]
+    (vector
+      (update-in a [:weight] * (:weight b) pe-avb)
+      (update-in b [:weight] * (:weight a) (- 1 pe-avb)))))
+
+(defn weighted-pairing-pts
+  "Compute the expected point outcome Team a and Team b will yield when playing each other, using the
+  the current weights for each team."
+  [pick-pts upset-pts a b]
+  (let [a-comp-b (compare (:seed a) (:seed b))
+        plus (fnil + 0)]
+    (vector
+      (assoc a :avg-pts (* (:weight a) (plus (when (pos? a-comp-b)
+                                               upset-pts)
+                                             pick-pts)))
+      (assoc b :avg-pts (* (:weight b) (plus (when (neg? a-comp-b)
+                                               upset-pts)
+                                             pick-pts))))))
+
 (defmulti #^{:private true} compute-matchup
-  "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
-  for each round.  The second argument is an associative structure that gives the points per an upset pick for each
-  round.  The third and final argument is the matchup data to perform the computation on."
-  (fn [_ _ field]
-    (cond
-      (and (coll? field) (= (count field) 2) (map? (first field)) (map? (last field)))
-      :leaf
-      (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
-      :branch)))
+          "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
+          for each round.  The second argument is an associative structure that gives the points per an upset pick for each
+          round.  The third and final argument is the matchup data to perform the computation on."
+          (fn [_ _ field]
+            (cond
+              (and (coll? field) (= (count field) 2) (map? (first field)) (map? (last field)))
+              :leaf
+              (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
+              :branch)))
 (defmethod compute-matchup :default [_ _ matchup]
   matchup)
 (defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn [[upper-field] [lower-field] :as fields]]
@@ -95,10 +117,10 @@
       (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
       (reduce                                               ;aggregate game results together
         #(let [name (:name %2)]
-            (if (contains? %1 name)
-              (-> (update-in %1 [name :weight] + (:weight %2))
-                  (update-in [name :avg-pts] + (:avg-pts %2)))
-              (assoc %1 name %2)))
+          (if (contains? %1 name)
+            (-> (update-in %1 [name :weight] + (:weight %2))
+                (update-in [name :avg-pts] + (:avg-pts %2)))
+            (assoc %1 name %2)))
         {})
       vals                                                  ;get the aggregation
       (#(vector % fields)))))                               ;preserve the tree
@@ -123,8 +145,8 @@
   (vector
     (map
       #(update-in % [:expected-value] (fnil + 0 0)
-        (get-in parent-team-map [(:name %) :expected-value])
-        (:avg-pts %))
+                  (get-in parent-team-map [(:name %) :expected-value])
+                  (:avg-pts %))
       field)
     children))
 
@@ -174,4 +196,5 @@
     (->tournament-bracket
       bracket
       (->tournament-teams team-data))
-    ->tournament-tree))
+    ->tournament-tree
+    (round-info 7)))

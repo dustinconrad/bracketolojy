@@ -43,7 +43,7 @@
 (defmethod treeify :branch [[upper lower]]
   {:upper upper :lower lower})
 (defmethod treeify :leaf [node]
-  {:data {:teams (list node)} :upper nil :lower nil})
+  {:data {:teams (list node)}})
 
 (defn ->tournament-tree [bracket]
   (walk/postwalk
@@ -95,37 +95,33 @@
                                                upset-pts)
                                              pick-pts))))))
 
+(defn- compute-matchup-dispatch [_ _ node]
+  (when (and (map? node) (contains? node :upper) (contains? node :lower))
+    :branch))
+
 (defmulti #^{:private true} compute-matchup
-          "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
-          for each round.  The second argument is an associative structure that gives the points per an upset pick for each
-          round.  The third and final argument is the matchup data to perform the computation on."
-          (fn [_ _ field]
-            (cond
-              (and (coll? field) (= (count field) 2) (map? (first field)) (map? (last field)))
-              :leaf
-              (and (coll? field) (= (count field) 2) (coll? (first field)) (coll? (last field)))
-              :branch)))
-(defmethod compute-matchup :default [_ _ matchup]
-  matchup)
-(defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn [[upper-field] [lower-field] :as fields]]
-  (let [round (log2 (reduce + (map count fields)))
+  "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
+   for each round.  The second argument is an associative structure that gives the points per an upset pick for each
+   round.  The third and final argument is the matchup data to perform the computation on."
+   compute-matchup-dispatch)
+(defmethod compute-matchup :default [_ _ node]
+  node)
+(defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn node]
+  (let [round (get-in node [:data :round])
         pick-pts (pick-pts-fn round)
         upset-pts (upset-pts-fn round)]
-    (->>
-      (combo/cartesian-product upper-field lower-field)     ;all head to head games
-      (map (partial apply weighted-pairing-log5))           ;calculate win % per game
-      (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
-      (reduce                                               ;aggregate game results together
-        #(let [name (:name %2)]
-          (if (contains? %1 name)
-            (-> (update-in %1 [name :weight] + (:weight %2))
-                (update-in [name :avg-pts] + (:avg-pts %2)))
-            (assoc %1 name %2)))
-        {})
-      vals                                                  ;get the aggregation
-      (#(vector % fields)))))                               ;preserve the tree
-(defmethod compute-matchup :leaf [pick-scoring upset-scoring [a b]]
-  (compute-matchup pick-scoring upset-scoring [[(list a)] [(list b)]]))
+    (->> (combo/cartesian-product (get-in node [:upper :data :teams]) (get-in node [:lower :data :teams])) ;all head to head games
+         (map (partial apply weighted-pairing-log5))        ;calculate win % per game
+         (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
+         (reduce                                            ;aggregate game results together
+           #(let [name (:name %2)]
+             (if (contains? %1 name)
+               (-> (update-in %1 [name :weight] + (:weight %2))
+                   (update-in [name :avg-pts] + (:avg-pts %2)))
+               (assoc %1 name %2)))
+           {})
+         vals                                               ;get the aggregation
+         (assoc-in node [:data :teams]))))                  ;preserve the tree
 
 (defn tournament-probabilities
   "Computes the probability of the various outcomes of a tournament.  Calculates the first round, then
@@ -192,9 +188,11 @@
   per a correct pick for each round.  upset-scoring is an associative structure that gives the points per an
   upset pick for each round.  team-data is a seq of team data."
   [bracket pick-scoring upset-scoring team-data]
-  (->>
-    (->tournament-bracket
-      bracket
-      (->tournament-teams team-data))
-    ->tournament-tree
-    (round-info 7)))
+  (->> (->tournament-bracket
+         bracket
+         (->tournament-teams team-data))
+       ->tournament-tree
+       (round-info 7)
+       (tournament-probabilities
+         pick-scoring
+         upset-scoring)))

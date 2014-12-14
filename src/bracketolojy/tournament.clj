@@ -57,7 +57,7 @@
       :root)))
 
 (defmulti #^{:private true} compute-round
-  compute-round-dispatch)
+          compute-round-dispatch)
 (defmethod compute-round :default [_ node]
   node)
 (defmethod compute-round :branch [_ node]
@@ -100,10 +100,10 @@
     :branch))
 
 (defmulti #^{:private true} compute-matchup
-  "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
-   for each round.  The second argument is an associative structure that gives the points per an upset pick for each
-   round.  The third and final argument is the matchup data to perform the computation on."
-   compute-matchup-dispatch)
+          "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
+           for each round.  The second argument is an associative structure that gives the points per an upset pick for each
+           round.  The third and final argument is the matchup data to perform the computation on."
+          compute-matchup-dispatch)
 (defmethod compute-matchup :default [_ _ node]
   node)
 (defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn node]
@@ -137,28 +137,28 @@
 (defn- update-child-expected-value
   "Update the expected value of each team in the field using parent-team-map.  The expected value for each team in the
   field is the team's average points plus the expected value of the team in the parent-team-map."
-  [parent-team-map [field children]]
-  (vector
-    (map
-      #(update-in % [:expected-value] (fnil + 0 0)
-                  (get-in parent-team-map [(:name %) :expected-value])
-                  (:avg-pts %))
-      field)
-    children))
+  [parent-team-map node]
+  (update-in node [:data :teams]
+             (partial
+               map
+               #(update-in % [:expected-value] (fnil + 0 0)
+                           (get-in parent-team-map [(:name %) :expected-value])
+                           (:avg-pts %)))))
 
 (defn- update-expected-value
   "For each child in children, update the expected value of the teams in that child's field.  The expected value for each team
   in a field is the team's average points plus the expected value of the team in the parent field."
-  [[field children]]
-  (vector
-    field
-    (let [parent-team-map (->>
-                            field
-                            (map #((juxt :name identity) %))
-                            (into {}))]
-      (map
-        (partial update-child-expected-value parent-team-map)
-        children))))
+  [node]
+  (let [field (get-in node [:data :teams])
+        children ((juxt :upper :lower) node)]
+    (vector
+      field
+      (let [parent-team-map (->> field
+                                 (map #((juxt :name identity) %))
+                                 (into {}))]
+        (map
+          (partial update-child-expected-value parent-team-map)
+          children)))))
 
 (defn- compute-expected-value-helper
   "Recursively traverse the zipper, updating each node with the expected value computation."
@@ -167,20 +167,26 @@
     loc
     (recur (zip/next (zip/edit loc update-expected-value)))))
 
+(defn- branch? [node]
+  (and (map? node) (contains? node :upper) (contains? node :lower)))
+
+(defn children [node]
+  ((juxt :upper :lower) node))
+
+(defn make-node [existing [upper lower]]
+  (-> (assoc-in existing [:upper] upper)
+      (assoc-in [:lower] lower)))
+
 (defn compute-expected-value
   "Compute the expected value for each node in the tournament probabilites tree."
   [tp]
-  (->>
-    (update-child-expected-value nil tp)
-    (zip/zipper
-      (fn [[_ cn]]
-        (or (vector? cn) (seq? cn)))
-      (fn [[_ cn]]
-        (seq cn))
-      (fn [node cn]
-        (assoc node 1 cn)))
-    compute-expected-value-helper
-    zip/root))
+  (->> (update-child-expected-value nil tp)
+       (zip/zipper
+         branch?
+         children
+         make-node)
+       compute-expected-value-helper
+       zip/root))
 
 (defn predict-bracket
   "Predict the expected value for each team in each round of the tournament.  Bracket should be
@@ -195,4 +201,5 @@
        (round-info 7)
        (tournament-probabilities
          pick-scoring
-         upset-scoring)))
+         upset-scoring)
+       compute-expected-value))

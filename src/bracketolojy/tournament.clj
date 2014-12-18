@@ -60,6 +60,19 @@
   (-> (assoc-in existing [:upper] upper)
       (assoc-in [:lower] lower)))
 
+(defn- compute-max-round [mx loc]
+  (if (zip/end? loc)
+    mx
+    (recur (max mx (count (zip/path loc))) (zip/next loc))))
+
+(defn max-round [tree]
+  (->> tree
+       (zip/zipper
+         branch?
+         children
+         make-node)
+       (compute-max-round 0)))
+
 (defn- update-round [rnd node]
   (assoc-in node [:data :round] rnd))
 
@@ -196,7 +209,8 @@
          bracket
          (->tournament-teams team-data))
        ->tournament-tree
-       (round-info 7)
+       (#(let [tree %]
+          (round-info (max-round tree) tree)))
        (tournament-probabilities
          pick-scoring
          upset-scoring)

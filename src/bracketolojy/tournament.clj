@@ -50,27 +50,36 @@
     treeify
     bracket))
 
-(defn- compute-round-dispatch [_ node]
-  (when (and (map? node) (contains? node :upper) (contains? node :lower))
-    (if (get-in node [:data :round])
-      :branch
-      :root)))
+(defn- branch? [node]
+  (and (map? node) (contains? node :upper) (contains? node :lower)))
 
-(defmulti #^{:private true} compute-round
-          compute-round-dispatch)
-(defmethod compute-round :default [_ node]
-  node)
-(defmethod compute-round :branch [_ node]
-  (let [current-round (get-in node [:data :round])]
-    (-> (assoc-in node [:upper :data :round] (dec current-round))
-        (assoc-in [:lower :data :round] (dec current-round)))))
-(defmethod compute-round :root [max-rounds node]
-  (compute-round max-rounds (assoc-in node [:data :round] max-rounds)))
+(defn children [node]
+  ((juxt :upper :lower) node))
+
+(defn make-node [existing [upper lower]]
+  (-> (assoc-in existing [:upper] upper)
+      (assoc-in [:lower] lower)))
+
+(defn- update-round [rnd node]
+  (assoc-in node [:data :round] rnd))
+
+(defn- compute-round [loc]
+  (if (zip/end? loc)
+    loc
+    (if-let [parent-round (some-> (zip/up loc)
+                                  zip/node
+                                  (get-in [:data :round]))]
+      (recur (zip/next (zip/edit loc (partial update-round (dec parent-round)))))
+      (recur (zip/next loc)))))
 
 (defn round-info [max-rounds tree]
-  (walk/prewalk
-    (partial compute-round max-rounds)
-    tree))
+  (->> (update-round max-rounds tree)
+       (zip/zipper
+         branch?
+         children
+         make-node)
+       compute-round
+       zip/root))
 
 (defn weighted-pairing-log5
   "Compute and update the chance that Team a and Team b will advance when playing against each other,
@@ -138,16 +147,14 @@
   "Update the expected value of each team in the field using parent-team-map.  The expected value for each team in the
   field is the team's average points plus the expected value of the team in the parent-team-map."
   [parent-team-map node]
-  (if (seq (get-in node [:data :teams]))
-    (update-in
-      node
-      [:data :teams]
-      (partial
-        map
-        #(update-in % [:expected-value] (fnil + 0 0)
-                    (get-in parent-team-map [(:name %) :expected-value])
-                    (:avg-pts %))))
-    node))
+  (update-in
+    node
+    [:data :teams]
+    (partial
+      map
+      #(update-in % [:expected-value] (fnil + 0 0)
+                  (get-in parent-team-map [(:name %) :expected-value])
+                  (:avg-pts %)))))
 
 (defn- update-expected-value
   "For each child in children, update the expected value of the teams in that child's field.  The expected value for each team
@@ -156,7 +163,7 @@
   (let [parent-team-map (->> (get-in node [:data :teams])
                              (map #((juxt :name identity) %))
                              (into {}))]
-    (if (and (get node :upper) (get node :lower))
+    (if (branch? node)
       (-> (update-in node [:upper] (partial update-child-expected-value parent-team-map))
           (update-in [:lower] (partial update-child-expected-value parent-team-map)))
       node)))
@@ -167,16 +174,6 @@
   (if (zip/end? loc)
     loc
     (recur (zip/next (zip/edit loc update-expected-value)))))
-
-(defn- branch? [node]
-  (and (map? node) (contains? node :upper) (contains? node :lower)))
-
-(defn children [node]
-  ((juxt :upper :lower) node))
-
-(defn make-node [existing [upper lower]]
-  (-> (assoc-in existing [:upper] upper)
-      (assoc-in [:lower] lower)))
 
 (defn compute-expected-value
   "Compute the expected value for each node in the tournament probabilites tree."

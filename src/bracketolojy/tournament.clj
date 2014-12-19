@@ -6,13 +6,6 @@
             [clojure.walk :as walk]
             [clojure.zip :as zip]))
 
-(defn- log2
-  "The log base 2 of x, rounded to the nearest integer."
-  [x]
-  (Math/round
-    (/ (Math/log x)
-       (Math/log 2))))
-
 (defn ->tournament-teams
   "Transform a sequence of team data into a map of team name->tournament team data."
   [team-data]
@@ -77,6 +70,7 @@
   (assoc-in node [:data :round] rnd))
 
 (defn- compute-round [loc]
+  (dbg loc)
   (if (zip/end? loc)
     loc
     (if-let [parent-round (some-> (zip/up loc)

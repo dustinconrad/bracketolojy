@@ -69,23 +69,23 @@
 (defn- update-round [rnd node]
   (assoc-in node [:data :round] rnd))
 
-(defn- compute-round [loc]
-  (dbg loc)
+(defn- compute-round [max-rnd loc]
   (if (zip/end? loc)
     loc
-    (if-let [parent-round (some-> (zip/up loc)
-                                  zip/node
-                                  (get-in [:data :round]))]
-      (recur (zip/next (zip/edit loc (partial update-round (dec parent-round)))))
-      (recur (zip/next loc)))))
+    (let [rnd (or (some-> (zip/up loc)
+                          zip/node
+                          (get-in [:data :round])
+                          dec)
+                  max-rnd)]
+      (recur max-rnd (zip/next (zip/edit loc (partial update-round rnd)))))))
 
 (defn round-info [max-rounds tree]
-  (->> (update-round max-rounds tree)
-       (zip/zipper
+  (->> (zip/zipper
          branch?
          children
-         make-node)
-       compute-round
+         make-node
+         tree)
+       (compute-round max-rounds)
        zip/root))
 
 (defn weighted-pairing-log5

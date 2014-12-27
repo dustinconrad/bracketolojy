@@ -116,19 +116,23 @@
 (defn update-matchup [pick-pts-fn upset-pts-fn node]
   (let [round (get-in node [:data :round])
         pick-pts (pick-pts-fn round)
-        upset-pts (upset-pts-fn round)]
-    (->> (combo/cartesian-product (get-in node [:upper :data :teams]) (get-in node [:lower :data :teams])) ;all head to head games
-         (map (partial apply weighted-pairing-log5))        ;calculate win % per game
-         (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
-         (reduce                                            ;aggregate game results together
-           #(let [name (:name %2)]
-             (if (contains? %1 name)
-               (-> (update-in %1 [name :weight] + (:weight %2))
-                   (update-in [name :avg-pts] + (:avg-pts %2)))
-               (assoc %1 name %2)))
-           {})
-         vals                                               ;get the aggregation
-         (assoc-in node [:data :teams]))))
+        upset-pts (upset-pts-fn round)
+        upper (get-in node [:upper :data :teams])
+        lower (get-in node [:lower :data :teams])]
+    (if (and lower upper)
+      (->> (combo/cartesian-product upper lower)
+           (map (partial apply weighted-pairing-log5))      ;calculate win % per game
+           (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
+           (reduce                                          ;aggregate game results together
+             #(let [name (:name %2)]
+               (if (contains? %1 name)
+                 (-> (update-in %1 [name :weight] + (:weight %2))
+                     (update-in [name :avg-pts] + (:avg-pts %2)))
+                 (assoc %1 name %2)))
+             {})
+           vals                                             ;get the aggregation
+           (assoc-in node [:data :teams]))
+      node)))
 
 (defn compute-matchup [pick-pts-fn upset-pts-fn loc]
   (if (zip/end? loc)
@@ -144,18 +148,8 @@
          children
          make-node)
        bzip/post-order-first
-       (compute-matchup pick-pts-fn upset-pts-fn)))
-
-(defn tournament-probabilities
-  "Computes the probability of the various outcomes of a tournament.  Calculates the first round, then
-  uses the results from that to calculate the second round, ad infinitum until all rounds are calculated.
-  The first argument is an associative structure that gives the points per a correct pick for each round.
-  The second argument is an associative structure that gives the points per an upset pick for each round.
-  The third and final argument is the tournament bracket."
-  [pick-scoring upset-scoring tournament-bracket]
-  (walk/postwalk
-    (partial compute-matchup pick-scoring upset-scoring)
-    tournament-bracket))
+       (compute-matchup pick-pts-fn upset-pts-fn)
+       zip/root))
 
 (defn- update-child-expected-value
   "Update the expected value of each team in the field using parent-team-map.  The expected value for each team in the
@@ -213,7 +207,4 @@
        (#(let [tree %]
           (round-info (max-round tree) tree)))
        (matchup-info pick-scoring upset-scoring)
-       (tournament-probabilities
-         pick-scoring
-         upset-scoring)
        compute-expected-value))

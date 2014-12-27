@@ -2,7 +2,7 @@
   (:require [clojure.math.combinatorics :as combo]
             [bracketolojy.util :refer :all]
             [bracketolojy.log5 :as log5]
-            [bracketolojy.team-data :as data]
+            [bracketolojy.zip :as bzip]
             [clojure.walk :as walk]
             [clojure.zip :as zip]))
 
@@ -77,7 +77,9 @@
                           (get-in [:data :round])
                           dec)
                   max-rnd)]
-      (recur max-rnd (zip/next (zip/edit loc (partial update-round rnd)))))))
+      (->> (zip/edit loc (partial update-round rnd))
+           zip/next
+           (recur max-rnd)))))
 
 (defn round-info [max-rounds tree]
   (->> (zip/zipper
@@ -111,18 +113,7 @@
                                                upset-pts)
                                              pick-pts))))))
 
-(defn- compute-matchup-dispatch [_ _ node]
-  (when (and (map? node) (contains? node :upper) (contains? node :lower))
-    :branch))
-
-(defmulti #^{:private true} compute-matchup
-          "Compute a matchup.  The first argument is an associative structure that gives the points per a correct pick
-           for each round.  The second argument is an associative structure that gives the points per an upset pick for each
-           round.  The third and final argument is the matchup data to perform the computation on."
-          compute-matchup-dispatch)
-(defmethod compute-matchup :default [_ _ node]
-  node)
-(defmethod compute-matchup :branch [pick-pts-fn upset-pts-fn node]
+(defn update-matchup [pick-pts-fn upset-pts-fn node]
   (let [round (get-in node [:data :round])
         pick-pts (pick-pts-fn round)
         upset-pts (upset-pts-fn round)]
@@ -137,7 +128,23 @@
                (assoc %1 name %2)))
            {})
          vals                                               ;get the aggregation
-         (assoc-in node [:data :teams]))))                  ;preserve the tree
+         (assoc-in node [:data :teams]))))
+
+(defn compute-matchup [pick-pts-fn upset-pts-fn loc]
+  (if (zip/end? loc)
+    loc
+    (->> (zip/edit loc (partial update-matchup pick-pts-fn upset-pts-fn))
+         bzip/post-order-next
+         (recur pick-pts-fn upset-pts-fn))))
+
+(defn matchup-info [pick-pts-fn upset-pts-fn tree]
+  (->> tree
+       (zip/zipper
+         branch?
+         children
+         make-node)
+       bzip/post-order-first
+       (compute-matchup pick-pts-fn upset-pts-fn)))
 
 (defn tournament-probabilities
   "Computes the probability of the various outcomes of a tournament.  Calculates the first round, then
@@ -205,6 +212,7 @@
        ->tournament-tree
        (#(let [tree %]
           (round-info (max-round tree) tree)))
+       (matchup-info pick-scoring upset-scoring)
        (tournament-probabilities
          pick-scoring
          upset-scoring)

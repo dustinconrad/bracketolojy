@@ -113,31 +113,30 @@
                                                upset-pts)
                                              pick-pts))))))
 
-(defn update-matchup [pick-pts-fn upset-pts-fn node]
+(defn- update-matchup [pick-pts-fn upset-pts-fn node-children node]
   (let [round (get-in node [:data :round])
         pick-pts (pick-pts-fn round)
-        upset-pts (upset-pts-fn round)
-        upper (get-in node [:upper :data :teams])
-        lower (get-in node [:lower :data :teams])]
-    (if (and lower upper)
-      (->> (combo/cartesian-product upper lower)
-           (map (partial apply weighted-pairing-log5))      ;calculate win % per game
-           (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
-           (reduce                                          ;aggregate game results together
-             #(let [name (:name %2)]
-               (if (contains? %1 name)
-                 (-> (update-in %1 [name :weight] + (:weight %2))
-                     (update-in [name :avg-pts] + (:avg-pts %2)))
-                 (assoc %1 name %2)))
-             {})
-           vals                                             ;get the aggregation
-           (assoc-in node [:data :teams]))
-      node)))
+        upset-pts (upset-pts-fn round)]
+    (->> (map (comp :teams :data) node-children)
+         (apply combo/cartesian-product)
+         (map (partial apply weighted-pairing-log5))        ;calculate win % per game
+         (mapcat (partial apply weighted-pairing-pts pick-pts upset-pts)) ;calculate expected pts per game
+         (reduce                                            ;aggregate game results together
+           #(let [name (:name %2)]
+             (if (contains? %1 name)
+               (-> (update-in %1 [name :weight] + (:weight %2))
+                   (update-in [name :avg-pts] + (:avg-pts %2)))
+               (assoc %1 name %2)))
+           {})
+         vals                                               ;get the aggregation
+         (assoc-in node [:data :teams]))))
 
-(defn compute-matchup [pick-pts-fn upset-pts-fn loc]
+(defn- compute-matchup [pick-pts-fn upset-pts-fn loc]
   (if (zip/end? loc)
     loc
-    (->> (zip/edit loc (partial update-matchup pick-pts-fn upset-pts-fn))
+    (->> (if (zip/branch? loc)
+           (zip/edit loc (partial update-matchup pick-pts-fn upset-pts-fn (zip/children loc)))
+           loc)
          bzip/post-order-next
          (recur pick-pts-fn upset-pts-fn))))
 

@@ -150,42 +150,32 @@
        (compute-matchup pick-pts-fn upset-pts-fn)
        zip/root))
 
-(defn- update-child-expected-value
-  "Update the expected value of each team in the field using parent-team-map.  The expected value for each team in the
-  field is the team's average points plus the expected value of the team in the parent-team-map."
-  [parent-team-map node]
-  (update-in
-    node
-    [:data :teams]
-    (partial
-      map
-      #(update-in % [:expected-value] (fnil + 0 0)
-                  (get-in parent-team-map [(:name %) :expected-value])
-                  (:avg-pts %)))))
-
 (defn- update-expected-value
-  "For each child in children, update the expected value of the teams in that child's field.  The expected value for each team
-  in a field is the team's average points plus the expected value of the team in the parent field."
-  [node]
-  (let [parent-team-map (->> (get-in node [:data :teams])
-                             (map #((juxt :name identity) %))
-                             (into {}))]
-    (if (branch? node)
-      (-> (update-in node [:upper] (partial update-child-expected-value parent-team-map))
-          (update-in [:lower] (partial update-child-expected-value parent-team-map)))
-      node)))
+  [parent-node node]
+  (let [parent-team-map (some->> (get-in parent-node [:data :teams])
+                                 (map #((juxt :name identity) %))
+                                 (into {}))]
+    (update-in
+      node
+      [:data :teams]
+      (partial
+        map
+        #(update-in % [:expected-value] (fnil + 0 0)
+                    (get-in parent-team-map [(:name %) :expected-value])
+                    (:avg-pts %))))))
 
 (defn- compute-expected-value-helper
   "Recursively traverse the zipper, updating each node with the expected value computation."
   [loc]
   (if (zip/end? loc)
     loc
-    (recur (zip/next (zip/edit loc update-expected-value)))))
+    (let [parent-node (some-> (zip/up loc) zip/node)]
+      (recur (zip/next (zip/edit loc (partial update-expected-value parent-node)))))))
 
 (defn compute-expected-value
   "Compute the expected value for each node in the tournament probabilites tree."
   [tp]
-  (->> (update-child-expected-value nil tp)
+  (->> tp
        (zip/zipper
          branch?
          children

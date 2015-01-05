@@ -1,11 +1,9 @@
-/**
- * Created by Dustin on 5/20/14.
- */
-function initializeRegion(region, teams) {
-    for (var i = 0; i <= 15; i++) {
-        var seed = i + 1;
-        region.find("span.seed:contains('" + seed + "')")
-            .filter(function(index) { return $(this).text() === seed.toString(); })
-            .after(teams[i]);
-    }
+function init(canvas) {
+    var stage = new createjs.Stage("bracket-canvas");
+    var circle = new createjs.Shape();
+    circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
+    circle.x = 100;
+    circle.y = 100;
+    stage.addChild(circle);
+    stage.update();
 }

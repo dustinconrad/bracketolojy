@@ -1,5 +1,5 @@
-function init(canvas) {
-    var stage = new createjs.Stage("bracket-canvas");
+function init(id) {
+    var stage = new createjs.Stage(id);
     var circle = new createjs.Shape();
     circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
     circle.x = 100;

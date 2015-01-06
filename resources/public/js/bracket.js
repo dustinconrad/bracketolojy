@@ -1,9 +1,12 @@
-function init(id) {
-    var stage = new createjs.Stage(id);
-    var circle = new createjs.Shape();
-    circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
-    circle.x = 100;
-    circle.y = 100;
-    stage.addChild(circle);
+function init(stageId) {
+    var stage = new createjs.Stage(stageId);
+    addMatchup(stage, 100, 100);
     stage.update();
 }
+
+function addMatchup(stage, x, y) {
+    var square = new createjs.Shape();
+    square.graphics.beginFill("DeepSkyBlue").drawRect(x, y, 100, 50);
+    stage.addChild(square);
+}
+

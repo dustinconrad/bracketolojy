@@ -1,10 +1,9 @@
 {% extends "templates/base.html" %}
 {% block content %}
 {% script "/js/bracket.js" %}
-<canvas id="bracket-canvas" width="1000" height="1000"></canvas>
 {% endblock %}
 {% block page-scripts %}
 <script>
-    init("bracket-canvas");
+    init("#content")
 </script>
 {% endblock %}

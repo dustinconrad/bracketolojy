@@ -1,17 +1,19 @@
-function init(stageId) {
-    var stage = new createjs.Stage(stageId);
-    initBracket(stage);
+function init(container) {
+    initBracket(container);
 }
 
-function drawBracket(stage, bracket) {
+function drawBracket(container, bracket) {
     console.log(bracket);
-    addMatchup(stage, bracket.data.teams, 100, 100);
-    stage.update();
+    var width = $(container).width();
+    console.log(width);
+
+    $(container)
+        .append('<div style="margin-left:auto;margin-right:auto;width:100px">test</div>');
 }
 
-function initBracket(stage) {
+function initBracket(container) {
     $.get("/api/bracket", function(data) {
-        drawBracket(stage, data);
+        drawBracket(container, data);
     });
 }
 

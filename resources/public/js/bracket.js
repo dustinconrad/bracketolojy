@@ -17,11 +17,11 @@ function initBracket(stage) {
 
 function addMatchup(stage, teams, x, y) {
     var padding = 10;
-    var textSize = 50;
+    var textSize = 14;
     for (i = 0; i < teams.length; i++) {
         var newY = y + padding + textSize * i;
         var team = teams[i];
-        var text = new createjs.Text(team.name);
+        var text = new createjs.Text(team.name, textSize + "px Arial");
         text.x = x + padding;
         text.y = newY;
         stage.addChild(text);

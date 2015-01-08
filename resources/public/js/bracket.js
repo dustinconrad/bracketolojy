@@ -2,19 +2,36 @@ function init(container) {
     initBracket(container);
 }
 
-function drawBracket(container, bracket) {
-    console.log(bracket);
-    var width = $(container).width();
-    console.log(width);
-
-    $(container)
-        .append('<div style="margin-left:auto;margin-right:auto;width:100px">test</div>');
-}
-
 function initBracket(container) {
     $.get("/api/bracket", function(data) {
         drawBracket(container, data);
     });
+}
+
+function drawBracket(container, bracket) {
+    console.log(bracket);
+    makeRoot(container, bracket);
+
+}
+
+function makeRoot(container, bracket) {
+    $(container).append(makeTable(bracket.data.teams));
+}
+
+function makeTable(teams) {
+    var rows = [];
+    for (i = 0; i < teams.length; i++) {
+        var team = teams[i];
+        rows.push('<tr>');
+        rows.push('<td>' + team.name + '</td>')
+        rows.push('<td>' + team["avg-pts"] + '</td>')
+        rows.push('</tr>');
+    }
+    return '<table>' +
+                '<tr><th>Team</th><th>Avg. pts</th></tr>' +
+                rows.join("") +
+           '</table>'
+
 }
 
 function addMatchup(stage, teams, x, y) {

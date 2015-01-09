@@ -9,15 +9,17 @@ function initBracket(container) {
 }
 
 function drawBracket(container, bracket) {
-    console.log(bracket);
     makeRoot(container, bracket);
 
 }
 
 function makeRoot(container, bracket) {
     var root = $(makeTable(bracket.data.teams));
-    root.css("margin-left", "auto")
-        .css("margin-right", "auto");
+    root.addClass("table")
+        .addClass("table-bordered")
+        .addClass("table-centered")
+        .addClass("table-condensed")
+        .addClass("small-text");
     $(container).append(root);
 }
 
@@ -27,11 +29,12 @@ function makeTable(teams) {
         var team = teams[i];
         rows.push('<tr>');
         rows.push('<td>' + team.name + '</td>');
-        rows.push('<td>' + team["avg-pts"] + '</td>');
+        rows.push('<td>' + team["avg-pts"].toFixed(2) + '</td>');
+        rows.push('<td>' + team["expected-value"].toFixed(2) + '</td>');
         rows.push('</tr>');
     }
     return '<table>' +
-                '<tr><th>Team</th><th>Avg. pts</th></tr>' +
+                '<tr><th>Team</th><th>Avg. pts</th><th>Exp. value</th></tr>' +
                 rows.join("") +
            '</table>';
 

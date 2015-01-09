@@ -15,7 +15,10 @@ function drawBracket(container, bracket) {
 }
 
 function makeRoot(container, bracket) {
-    $(container).append(makeTable(bracket.data.teams));
+    var root = $(makeTable(bracket.data.teams));
+    root.css("margin-left", "auto")
+        .css("margin-right", "auto");
+    $(container).append(root);
 }
 
 function makeTable(teams) {
@@ -23,14 +26,14 @@ function makeTable(teams) {
     for (i = 0; i < teams.length; i++) {
         var team = teams[i];
         rows.push('<tr>');
-        rows.push('<td>' + team.name + '</td>')
-        rows.push('<td>' + team["avg-pts"] + '</td>')
+        rows.push('<td>' + team.name + '</td>');
+        rows.push('<td>' + team["avg-pts"] + '</td>');
         rows.push('</tr>');
     }
     return '<table>' +
                 '<tr><th>Team</th><th>Avg. pts</th></tr>' +
                 rows.join("") +
-           '</table>'
+           '</table>';
 
 }
 

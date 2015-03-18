@@ -184,12 +184,7 @@
        zip/root))
 
 (defn- sort-node-teams [cmp node]
-  (let [before (get-in node [:data :teams])
-        after (update-in node [:data :teams] (partial sort cmp))]
-    (dbg-v "")
-    (dbg-v before)
-    (dbg-v (get-in after [:data :teams]))
-    after))
+  (update-in node [:data :teams] (partial sort cmp)))
 
 (defn- sort-teams-helper [cmp loc]
   (if (zip/end? loc)

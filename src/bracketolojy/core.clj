@@ -118,6 +118,6 @@
 (defn main []
   (tourney/predict-bracket
     bracket
-    (partial get [0 0 1 2 4 8 12 16])
-    (partial get [0 0 1 2 3 4 5 6])
+    (partial get [0 0 2 3 5 8 13 21])
+    (partial get [0 0 4 4 2 1 1 1])
     (data/get-kenpom-teams-bundled)))

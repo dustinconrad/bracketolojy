@@ -206,7 +206,7 @@
        zip/root))
 
 (defn- expected-value-desc-comparator [left right]
-  (- (:expected-value right)
+  (compare (:expected-value right)
      (:expected-value left)))
 
 (defn predict-bracket

@@ -183,6 +183,32 @@
        compute-expected-value-helper
        zip/root))
 
+(defn- sort-node-teams [cmp node]
+  (let [before (get-in node [:data :teams])
+        after (update-in node [:data :teams] (partial sort cmp))]
+    (dbg-v "")
+    (dbg-v before)
+    (dbg-v (get-in after [:data :teams]))
+    after))
+
+(defn- sort-teams-helper [cmp loc]
+  (if (zip/end? loc)
+    loc
+    (recur cmp (zip/next (zip/edit loc (partial sort-node-teams cmp))))))
+
+(defn sort-teams [cmp tree]
+  (->> tree
+       (zip/zipper
+         branch?
+         children
+         make-node)
+       (sort-teams-helper cmp)
+       zip/root))
+
+(defn- expected-value-desc-comparator [left right]
+  (- (:expected-value right)
+     (:expected-value left)))
+
 (defn predict-bracket
   "Predict the expected value for each team in each round of the tournament.  Bracket should be
   a bracket of team names in a tree structure.  pick-scoring is an associative structure that gives the points
@@ -196,4 +222,5 @@
        (#(let [tree %]
           (round-info (max-round tree) tree)))
        (matchup-info pick-scoring upset-scoring)
-       compute-expected-value))
+       compute-expected-value
+       (sort-teams expected-value-desc-comparator)))

@@ -8,8 +8,7 @@
 (def bracket-data
   [
    [ ;Midwest
-    [[[[["Hampton"
-         "Manhattan"]
+    [[[["Hampton"
         "Kentucky"]
 
        ["Cincinnati"
@@ -48,8 +47,7 @@
         "Harvard"]]]
 
      [[["Xavier"
-        ["BYU"
-         "Mississippi"]]
+        "Mississippi"]
 
        ["Baylor"
         "Georgia St."]]
@@ -76,8 +74,7 @@
         "UC Irvine"]]]
 
      [[["Providence"
-        ["Boise St."
-         "Dayton"]]
+        "Dayton"]
 
        ["Oklahoma"
         "Albany"]]
@@ -91,8 +88,7 @@
 
     [;South
      [[["Duke"
-        ["North Florida"
-         "Robert Morris"]]
+        "Robert Morris"]
 
        ["San Diego St."
         "St. John's"]]
@@ -121,8 +117,8 @@
 (defn bracket []
   {:body (tourney/predict-bracket
            bracket-data
-           (partial get [0 0 2 3 5 8 13 21])
-           (partial get [0 0 4 4 2 1 1 1])
+           (partial get [0 1 2 4 8 16 32])
+           (partial get [0 0 0 0 0 0 0])
            (data/get-kenpom-teams-bundled))})
 
 (defroutes api-routes

@@ -47,15 +47,23 @@ function drawBracket(container, bracket, col, rowMin, rowMax) {
 
 function drawTable(container, teams, col, row) {
     var table = $(makeTable(teams));
-    table.addClass("table")
-        .addClass("table-bordered")
-        .addClass("table-condensed")
-        .addClass("small-text");
+    var styled = styleTable(table);
+    placeTable(container, styled, col, row);
+}
+
+function placeTable(container, table, col, row) {
     var tableDiv = $('<div/>')
         .addClass("col-md-offset-" + col*COL_WIDTH)
         .addClass("col-md-" + COL_WIDTH)
         .append(table);
     $(container).find("#row-"+ row).append(tableDiv);
+}
+
+function styleTable(table) {
+    return $(table).addClass("table")
+        .addClass("table-bordered")
+        .addClass("table-condensed")
+        .addClass("small-text");
 }
 
 function makeTable(teams) {
@@ -74,10 +82,11 @@ function makeTable(teams) {
         rows.push('<td>' + prob.toFixed(2) + '</td>');
         rows.push('</tr>');
     }
-    return '<table>' +
+    var table = '<table>' +
         '<tr><th>Team</th><th>AVG</th><th>EV</th><th>Prob.</th></tr>' +
         rows.join("") +
         '</table>';
+    return table;
 }
 
 

@@ -20,7 +20,7 @@ function drawBracketHelper(container, bracket) {
     var rows = Math.pow(2, depth);
 
     //roundHeaders
-    var roundHeaders = $('<div class="row" id="roundHeaders"></div>');
+    var roundHeaders = $('<div class="row" id="roundHeaders"/>');
     for (var r = 0; r < depth; r++) {
         var roundHeader = $('<span>Round ' + (depth - r)  + '</span>')
             .addClass('col-md-' + COL_WIDTH);
@@ -29,7 +29,7 @@ function drawBracketHelper(container, bracket) {
     $(container).append(roundHeaders);
 
     for (var i = rows - 1; i >= 0; i--) {
-        $(container).append('<div class="row" id="row-' + i + '"></div>');
+        $(container).append('<div class="row" id="row-' + i + '"/>');
     }
     drawBracket(container, bracket, 0, 0, rows)
 }
@@ -82,9 +82,19 @@ function makeTable(teams) {
         rows.push('<td>' + prob.toFixed(2) + '</td>');
         rows.push('</tr>');
     }
-    var table = '<table>' +
-        '<tr><th>Team</th><th>AVG</th><th>EV</th><th>Prob.</th></tr>' +
-        rows.join("") +
+    var table =
+        '<table>' +
+            '<thead>' +
+                '<tr>' +
+                    '<th>Team</th>' +
+                    '<th>AVG</th>' +
+                    '<th>EV</th>' +
+                    '<th>Prob.</th>' +
+                '</tr>' +
+            '</thead>' +
+            '<tbody>' +
+                rows.join("") +
+            '</tbody>' +
         '</table>';
     return table;
 }

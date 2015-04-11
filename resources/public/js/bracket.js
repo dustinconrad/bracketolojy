@@ -99,4 +99,26 @@ function makeTable(teams) {
     return table;
 }
 
+function submitBracket(e) {
+    var upsetPts = [];
+    $(e.data["upset"])
+        .children("input")
+        .each(function(_, child) {
+            var uPt = +child.value;
+            upsetPts.push(uPt);
+        });
+    var roundPts = [];
+    $(e.data["pts"])
+        .children("input")
+        .each(function(_, child) {
+            var roundPt = +child.value;
+            roundPts.push(roundPt);
+        });
+    $.ajax({
+        type: "POST",
+        url: "/api/bracket",
+        data: JSON.stringify({ roundPts : roundPts, upsetPts : upsetPts }),
+        contentType: "application/json; charset=UTF-8",
+        dataType: "json"});
+}
 

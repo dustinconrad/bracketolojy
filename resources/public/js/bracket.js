@@ -119,6 +119,9 @@ function submitBracket(e) {
         url: "/api/bracket",
         data: JSON.stringify({ roundPts : roundPts, upsetPts : upsetPts }),
         contentType: "application/json; charset=UTF-8",
-        dataType: "json"});
+        dataType: "json"})
+        .success(function(data) {
+            drawBracketHelper(e.data["container"], data);
+        });
 }
 

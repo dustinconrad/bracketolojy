@@ -115,15 +115,14 @@
    ])
 
 (defn ->points-per-round-fn [pts-per-round]
-  (partial get (concat [0] pts-per-round)))
+  (let [pts (vec (concat [0] pts-per-round))]
+    (partial get pts)))
 
 (defn bracket [round-pts upset-pts]
-  (println round-pts)
-  (println upset-pts)
   {:body (tourney/predict-bracket
            bracket-data
-           (partial get [0 1 2 4 8 16 32])
-           (partial get [0 0 0 0 0 0 0])
+           (->points-per-round-fn round-pts)
+           (->points-per-round-fn upset-pts)
            (data/get-kenpom-teams-bundled))})
 
 (defroutes api-routes

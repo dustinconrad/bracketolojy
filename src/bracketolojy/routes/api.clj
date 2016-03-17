@@ -7,109 +7,109 @@
 
 (def bracket-data
   [
-   [ ;Midwest
-    [[[["Hampton"
-        "Kentucky"]
+   [ ;South
+    [[[["Kansas"
+        "Austin Peay"]
 
-       ["Cincinnati"
-        "Purdue"]]
+       ["Colorado"
+        "Connecticut"]]
 
-      [["West Virginia"
-        "Buffalo"]
+      [["Maryland"
+        "South Dakota St."]
 
-       ["Maryland"
-        "Valparaiso"]]]
+       ["California"
+        "Hawaii"]]]
 
-     [[["Butler"
-        "Texas"]
+     [[["Arizona"
+        "Wichita St."]
 
-       ["Notre Dame"
-        "Northeastern"]]
+       ["Miami FL"
+        "Buffalo"]]
 
-      [["Wichita St."
-        "Indiana"]
+      [["Iowa"
+        "Temple"]
 
-       ["Kansas"
-        "New Mexico St."]]]]
+       ["Villanova"
+        "UNC Asheville"]]]]
 
 
     [;West
-     [[["Wisconsin"
-        "Coastal Carolina"]
+     [[["Oregon"
+        "Holy Cross"]
 
-       ["Oregon"
-        "Oklahoma St."]]
+       ["Saint Joseph's"
+        "Cincinnati"]]
 
-      [["Arkansas"
-        "Wofford"]
+      [["Baylor"
+        "Yale"]
 
-       ["North Carolina"
-        "Harvard"]]]
+       ["Duke"
+        "UNC Wilmington"]]]
 
-     [[["Xavier"
-        "Mississippi"]
+     [[["Texas"
+        "Northern Iowa"]
 
-       ["Baylor"
-        "Georgia St."]]
+       ["Texas A&M"
+        "Green Bay"]]
 
-      [["VCU"
-        "Ohio St."]
+      [["Oregon St."
+        "VCU"]
 
-       ["Arizona"
-        "Texas Southern"]]]]
+       ["Oklahoma"
+        "Cal St. Bakersfield"]]]]
     ]
 
    [
     [;East
-     [[["Villanova"
-        "Lafayette"]
+     [[["North Carolina"
+        "Florida Gulf Coast"]
 
-       ["North Carolina St."
-        "LSU"]]
+       ["USC"
+        "Providence"]]
 
-      [["Northern Iowa"
-        "Wyoming"]
+      [["Indiana"
+        "Chattanooga"]
 
-       ["Louisville"
-        "UC Irvine"]]]
+       ["Kentucky"
+        "Stony Brook"]]]
 
-     [[["Providence"
-        "Dayton"]
+     [[["Notre Dame"
+        "Michigan"]
 
-       ["Oklahoma"
-        "Albany"]]
+       ["West Virginia"
+        "Stephen F. Austin"]]
 
-      [["Michigan St."
-        "Georgia"]
+      [["Wisconsin"
+        "Pittsburgh"]
 
-       ["Virginia"
-        "Belmont"]]]
+       ["Xavier"
+        "Weber St."]]]
      ]
 
-    [;South
-     [[["Duke"
-        "Robert Morris"]
+    [;Midwest
+     [[["Virginia"
+        "Hampton"]
 
-       ["San Diego St."
-        "St. John's"]]
+       ["Texas Tech"
+        "Butler"]]
 
-      [["Utah"
-        "Stephen F. Austin"]
-
-       ["Georgetown"
-        "Eastern Washington"]]]
-
-     [[["SMU"
-        "UCLA"]
+      [["Purdue"
+        "Arkansas Little Rock"]
 
        ["Iowa St."
-        "UAB"]]
+        "Iona"]]]
 
-      [["Iowa"
-        "Davidson"]
+     [[["Seton Hall"
+        "Gonzaga"]
 
-       ["Gonzaga"
-        "North Dakota St."]]]
+       ["Utah"
+        "Fresno St."]]
+
+      [["Dayton"
+        "Syracuse"]
+
+       ["Michigan St."
+        "Middle Tennessee"]]]
      ]
     ]
    ])
@@ -128,5 +128,4 @@
 (defroutes api-routes
   (context "/api" []
     (POST "/bracket" [roundPts upsetPts :as request]
-      (println request)
       (bracket roundPts upsetPts))))

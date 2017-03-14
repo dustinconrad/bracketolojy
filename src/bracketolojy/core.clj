@@ -4,109 +4,109 @@
 
 (def bracket
   [
-   [ ;South
-    [[[["Kansas"
-        "Austin Peay"]
+   [ ;East
+    [[[["Villanova"
+        "New Orleans"]
 
-       ["Colorado"
-        "Connecticut"]]
+       ["Wisconsin"
+        "Virginia Tech"]]
 
-      [["Maryland"
-        "South Dakota St."]
+      [["Virginia"
+        "UNC Wilmington"]
 
-       ["California"
-        "Hawaii"]]]
+       ["Florida"
+        "East Tennessee St."]]]
 
-     [[["Arizona"
-        "Wichita St."]
+     [[["SMU"
+        "Providence"]
 
-       ["Miami FL"
-        "Buffalo"]]
+       ["Baylor"
+        "New Mexico St."]]
 
-      [["Iowa"
-        "Temple"]
+      [["South Carolina"
+        "Marquette"]
 
-       ["Villanova"
-        "UNC Asheville"]]]]
+       ["Duke"
+        "Troy"]]]]
 
 
     [;West
-     [[["Oregon"
-        "Holy Cross"]
+     [[["Gonzaga"
+        "South Dakota St."]
 
-       ["Saint Joseph's"
-        "Cincinnati"]]
+       ["Northwestern"
+        "Vanderbilt"]]
 
-      [["Baylor"
-        "Yale"]
+      [["Notre Dame"
+        "Princeton"]
 
-       ["Duke"
-        "UNC Wilmington"]]]
+       ["West Virginia"
+        "Bucknell"]]]
 
-     [[["Texas"
-        "Northern Iowa"]
+     [[["Maryland"
+        "Xavier"]
 
-       ["Texas A&M"
-        "Green Bay"]]
+       ["Florida St."
+        "Florida Gulf Coast"]]
 
-      [["Oregon St."
+      [["Saint Mary's"
         "VCU"]
 
-       ["Oklahoma"
-        "Cal St. Bakersfield"]]]]
+       ["Arizona"
+        "North Dakota"]]]]
     ]
 
    [
-    [;East
-     [[["North Carolina"
-        "Florida Gulf Coast"]
+    [;Midwest
+     [[["Kansas"
+        "North Carolina Central"]
 
-       ["USC"
-        "Providence"]]
+       ["Miami FL"
+        "Michigan St."]]
 
-      [["Indiana"
-        "Chattanooga"]
+      [["Iowa St."
+        "Nevada"]
 
-       ["Kentucky"
-        "Stony Brook"]]]
+       ["Purdue"
+        "Vermont"]]]
 
-     [[["Notre Dame"
-        "Michigan"]
+     [[["Creighton"
+        "Rhode Island"]
 
-       ["West Virginia"
-        "Stephen F. Austin"]]
+       ["Oregon"
+        "Iona"]]
 
-      [["Wisconsin"
-        "Pittsburgh"]
+      [["Michigan"
+        "Oklahoma St."]
 
-       ["Xavier"
-        "Weber St."]]]
+       ["Louisville"
+        "Jacksonville St."]]]
      ]
 
-    [;Midwest
-     [[["Virginia"
-        "Hampton"]
+    [;South
+     [[["North Carolina"
+        "Texas Southern"]
 
-       ["Texas Tech"
-        "Butler"]]
+       ["Arkansas"
+        "Seton Hall"]]
 
-      [["Purdue"
-        "Arkansas Little Rock"]
+      [["Minnesota"
+        "Middle Tennessee"]
 
-       ["Iowa St."
-        "Iona"]]]
+       ["Butler"
+        "Winthrop"]]]
 
-     [[["Seton Hall"
-        "Gonzaga"]
+     [[["Cincinnati"
+        "Kansas St."]
 
-       ["Utah"
-        "Fresno St."]]
+       ["UCLA"
+        "Kent St."]]
 
       [["Dayton"
-        "Syracuse"]
+        "Wichita St."]
 
-       ["Michigan St."
-        "Middle Tennessee"]]]
+       ["Kentucky"
+        "Northern Kentucky"]]]
      ]
     ]
    ])
@@ -114,8 +114,8 @@
 (defn main []
   (tourney/predict-bracket
     bracket
-    (partial get [0 1 2 4 8 16 32])
-    (partial get [0 0 0 0 0 0 0])
+    (partial get [0 2 3 5 8 13 21])
+    (partial get [0 4 4 2 1 1 1])
     (data/get-kenpom-teams-bundled)))
 
 (defn check-bracket []

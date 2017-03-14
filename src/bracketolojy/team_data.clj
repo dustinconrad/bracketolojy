@@ -17,12 +17,16 @@
       (#(html/let-select %
          [name [[:td (html/nth-child 2)] :a html/text]
           seed [[:td (html/nth-child 2)] :span html/text]
-          pe [[:td (html/nth-child 5)] html/text]]
+          adj-o [[:td (html/nth-child 6)] html/text]
+          adj-d [[:td (html/nth-child 8)] html/text]
+          adj-t [[:td (html/nth-child 10)] html/text]]
          (->team
            (first name)
            (when-let [seed-int (first seed)]
              (Integer/parseInt seed-int))
-           (Double/parseDouble (first pe)))))
+           (let [o (Math/pow (Double/parseDouble (first adj-o)) 11.5)
+                 d (Math/pow (Double/parseDouble (first adj-d)) 11.5)]
+             (/ o (+ o d))))))
       (remove (comp nil? :name)))))
 
 (defn get-kenpom-teams
